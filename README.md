@@ -78,7 +78,7 @@ Steps:
 4. Launch `Runtime\DTXManiaNX.exe` to run the game from the build output.
 
 ## Packaging (installer)
-The Windows installer is produced with [Inno Setup](https://jrsoftware.org/isinfo.php) using the script `Installer setup.iss` (current version `1.4.3`, publisher `limyz`).
+The Windows installer is produced with [Inno Setup](https://jrsoftware.org/isinfo.php) using the script `Installer setup.iss` (current version `1.4.4`, publisher `limyz`).
 
 - **Destination:** the game is installed to `{userappdata}\DTXManiaNX` (no administrator rights are required for the app itself, only for the dependency installers).
 - **Payload:** the `[Files]` section copies everything from `Runtime\`: `DTXManiaNX.exe(.config)`, `DTXCreator.exe(.config)`, `Manual.chm`, `readme_jp.txt`, the whole `dll\` folder, `System\Graphics`, `System\Sounds`, `ja-JP\` and `Licenses\`.
@@ -87,7 +87,7 @@ The Windows installer is produced with [Inno Setup](https://jrsoftware.org/isinf
 To build the installer:
 1. Build the solution in `Release` first so that `Runtime\` contains the up-to-date binaries.
 2. Open `Installer setup.iss` in Inno Setup and compile it (or run `ISCC.exe "Installer setup.iss"` from the command line).
-3. The resulting `DTXManiaNX-1.4.3.exe` installer is written to the `Output\` folder.
+3. The resulting `DTXManiaNX-1.4.4.exe` installer is written to the `Output\` folder.
 
 ## One-command build
 Instead of doing the steps above manually, you can build the game and generate the installer with the bundled script. This does **not** require an IDE, only MSBuild and Inno Setup (see the requirements in the previous sections).
