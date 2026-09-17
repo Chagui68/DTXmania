@@ -56,6 +56,9 @@ Notes:
 - `DTXPath` folders are scanned on startup (and re-scan on song list). Just drop the song folder in place and restart the game (or delete `songlist.db` to force a full rebuild).
 - Audio is limited to `.wav`, `.mp3` and `.ogg`; `.opus` files (used by some Clone Hero packs) are not supported and will be silent.
 - Guitar/bass tracks from `.chart`/`.mid` files are not imported (drums only).
+- Drum lane mapping follows the Guitar Game Chart Formats specification:
+  - **4-lane MIDI (Expert tab):** note `0` = kick, `1` = snare, `2` = hi-hat, `3` = ride cymbal, `4` = crash cymbal. MIDI tom markers `111/112` (hi/floor tom) or a `5-lane` note `101` make the lane play a tom instead.
+  - **`.chart`:** note `0` = kick, `1` = snare, `2` = hi-hat, `3` = blue, `4` = green, `5` = green tom (5-lane); cymbal modifiers `66/67/68` turn the blue/green lanes into cymbals. Without modifiers, `3` plays a hi tom and `4` a low tom.
 
 ## Building from source
 Requirements:
@@ -78,7 +81,7 @@ Steps:
 4. Launch `Runtime\DTXManiaNX.exe` to run the game from the build output.
 
 ## Packaging (installer)
-The Windows installer is produced with [Inno Setup](https://jrsoftware.org/isinfo.php) using the script `Installer setup.iss` (current version `1.4.4`, publisher `limyz`).
+The Windows installer is produced with [Inno Setup](https://jrsoftware.org/isinfo.php) using the script `Installer setup.iss` (current version `1.4.5`, publisher `limyz`).
 
 - **Destination:** the game is installed to `{userappdata}\DTXManiaNX` (no administrator rights are required for the app itself, only for the dependency installers).
 - **Payload:** the `[Files]` section copies everything from `Runtime\`: `DTXManiaNX.exe(.config)`, `DTXCreator.exe(.config)`, `Manual.chm`, `readme_jp.txt`, the whole `dll\` folder, `System\Graphics`, `System\Sounds`, `ja-JP\` and `Licenses\`.
@@ -87,7 +90,7 @@ The Windows installer is produced with [Inno Setup](https://jrsoftware.org/isinf
 To build the installer:
 1. Build the solution in `Release` first so that `Runtime\` contains the up-to-date binaries.
 2. Open `Installer setup.iss` in Inno Setup and compile it (or run `ISCC.exe "Installer setup.iss"` from the command line).
-3. The resulting `DTXManiaNX-1.4.4.exe` installer is written to the `Output\` folder.
+3. The resulting `DTXManiaNX-1.4.5.exe` installer is written to the `Output\` folder.
 
 ## One-command build
 Instead of doing the steps above manually, you can build the game and generate the installer with the bundled script. This does **not** require an IDE, only MSBuild and Inno Setup (see the requirements in the previous sections).

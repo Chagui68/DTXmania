@@ -16,21 +16,38 @@ namespace DTXMania
 		private const string SAMPLE_PREFIX = "_dtxmania_";
 		private const int BGM_WAV_NUMBER = 1;
 
+		private const int LANE_KICK = 0;
+		private const int LANE_SNARE = 1;
+		private const int LANE_HAT = 2;
+		private const int LANE_HIGH_TOM = 3;
+		private const int LANE_LOW_TOM = 4;
+		private const int LANE_CYMBAL = 5;
+		private const int LANE_RIDE = 6;
+		private const int LANE_HAT_OPEN = 7;
+
 		private static readonly EChannel[] arLaneChannel = new EChannel[]
 		{
 			EChannel.BassDrum,
 			EChannel.Snare,
 			EChannel.HiHatClose,
 			EChannel.HighTom,
+			EChannel.LowTom,
 			EChannel.Cymbal,
+			EChannel.RideCymbal,
+			EChannel.HiHatOpen,
 		};
-		private static readonly string[] arLaneSample = new string[] { "kick", "snare", "hat", "tom", "cymbal" };
-		private static readonly int[] arLaneWavNumber = new int[] { 2, 3, 4, 5, 6 };
+		private static readonly string[] arLaneSample = new string[]
+		{
+			"kick", "snare", "hat", "tom", "tom", "cymbal", "cymbal", "hat",
+		};
+		private static readonly int[] arLaneWavNumber = new int[] { 2, 3, 4, 5, 6, 7, 8, 9 };
+		private static readonly string[] arBaseSample = new string[] { "kick", "snare", "hat", "tom", "cymbal" };
 
 		private sealed class CNote
 		{
 			public long nTick;
 			public int nLane;
+			public bool bCymbal;
 		}
 
 		private sealed class CTempo
@@ -88,6 +105,7 @@ namespace DTXMania
 			Dictionary<string, string> dicSong =
 				new Dictionary<string, string>( StringComparer.OrdinalIgnoreCase );
 			List<KeyValuePair<long, int>> listDrumNote = new List<KeyValuePair<long, int>>();
+			List<KeyValuePair<long, int>> listCymbalMarker = new List<KeyValuePair<long, int>>();
 
 			string strSection = "";
 			string strDrumsSection = "";
@@ -151,9 +169,13 @@ namespace DTXMania
 					if( tParseChartTick( strLine, out nTick ) )
 					{
 						int nNote = tParseChartNoteValue( strLine );
-						if( nNote >= 0 && nNote <= 4 )
+						if( nNote >= 0 && nNote <= 5 )
 						{
 							listDrumNote.Add( new KeyValuePair<long, int>( nTick, nNote ) );
+						}
+						else if( nNote >= 66 && nNote <= 68 )
+						{
+							listCymbalMarker.Add( new KeyValuePair<long, int>( nTick, nNote - 64 ) );
 						}
 					}
 				}
@@ -187,9 +209,48 @@ namespace DTXMania
 				data.strMusicFile = strValue2;
 			}
 
+			bool bFiveLane = false;
 			foreach( KeyValuePair<long, int> kv in listDrumNote )
 			{
-				data.listNote.Add( new CNote() { nTick = kv.Key, nLane = kv.Value } );
+				if( kv.Value == 5 )
+				{
+					bFiveLane = true;
+					break;
+				}
+			}
+			HashSet<long> setCymbalMarker = new HashSet<long>();
+			foreach( KeyValuePair<long, int> kv in listCymbalMarker )
+			{
+				setCymbalMarker.Add( ( kv.Key << 4 ) | ( kv.Value & 0xF ) );
+			}
+			foreach( KeyValuePair<long, int> kv in listDrumNote )
+			{
+				int nLane;
+				switch( kv.Value )
+				{
+					case 0: nLane = LANE_KICK; break;
+					case 1: nLane = LANE_SNARE; break;
+					case 2: nLane = LANE_HAT; break;
+					case 3:
+					{
+						nLane = setCymbalMarker.Contains( ( kv.Key << 4 ) | 3 ) ? LANE_RIDE : LANE_HIGH_TOM;
+						break;
+					}
+					case 4:
+					{
+						if( bFiveLane )
+						{
+							nLane = LANE_CYMBAL;
+						}
+						else
+						{
+							nLane = setCymbalMarker.Contains( ( kv.Key << 4 ) | 4 ) ? LANE_CYMBAL : LANE_LOW_TOM;
+						}
+						break;
+					}
+					default: nLane = LANE_LOW_TOM; break;
+				}
+				data.listNote.Add( new CNote() { nTick = kv.Key, nLane = nLane } );
 			}
 
 			tApplySongIni( data, strFolder );
@@ -256,6 +317,7 @@ namespace DTXMania
 
 			string strConductorName = "";
 			List<CNote> listBestNote = null;
+			List<KeyValuePair<long, int>> listBestMarker = null;
 			int nBestScore = -1;
 
 			int nPos = 8 + nHeaderLength;
@@ -271,6 +333,7 @@ namespace DTXMania
 
 				string strTrackName = "";
 				List<CNote> listTrackNote = new List<CNote>();
+				List<KeyValuePair<long, int>> listTrackMarker = new List<KeyValuePair<long, int>>();
 				int nP = nStart;
 				long nTicks = 0;
 				int nRunningStatus = 0;
@@ -338,7 +401,14 @@ namespace DTXMania
 						nP++;
 						if( nHigh == 0x90 && nData2 > 0 )
 						{
-							listTrackNote.Add( new CNote() { nTick = nTicks, nLane = nData1 } );
+							if( nData1 >= 110 && nData1 <= 112 )
+							{
+								listTrackMarker.Add( new KeyValuePair<long, int>( nTicks, nData1 - 108 ) );
+							}
+							else
+							{
+								listTrackNote.Add( new CNote() { nTick = nTicks, nLane = nData1 } );
+							}
 						}
 					}
 					else
@@ -362,6 +432,7 @@ namespace DTXMania
 				{
 					nBestScore = nScore;
 					listBestNote = listTrackNote;
+					listBestMarker = listTrackMarker;
 				}
 
 				nPos = nStart + nChunkLength;
@@ -370,13 +441,56 @@ namespace DTXMania
 			int nBase = tFindDrumOctave( listBestNote );
 			if( listBestNote != null )
 			{
+				bool bFiveLane = false;
 				foreach( CNote note in listBestNote )
 				{
-					int nLane = note.nLane - nBase;
-					if( nLane >= 0 && nLane <= 4 )
+					if( note.nLane == nBase + 5 )
 					{
-						data.listNote.Add( new CNote() { nTick = note.nTick, nLane = nLane } );
+						bFiveLane = true;
+						break;
 					}
+				}
+				HashSet<long> setTomMarker = new HashSet<long>();
+				if( listBestMarker != null )
+				{
+					foreach( KeyValuePair<long, int> kv in listBestMarker )
+					{
+						setTomMarker.Add( ( kv.Key << 4 ) | ( kv.Value & 0xF ) );
+					}
+				}
+				foreach( CNote note in listBestNote )
+				{
+					int nOff = note.nLane - nBase;
+					int nLane;
+					switch( nOff )
+					{
+						case -1: nLane = LANE_KICK; break;
+						case 0: nLane = LANE_KICK; break;
+						case 1: nLane = LANE_SNARE; break;
+						case 2: nLane = LANE_HAT; break;
+						case 3:
+						{
+							nLane = ( bFiveLane || setTomMarker.Contains( ( note.nTick << 4 ) | 3 ) )
+								? LANE_HIGH_TOM : LANE_RIDE;
+							break;
+						}
+						case 4:
+						{
+							if( bFiveLane )
+							{
+								nLane = LANE_CYMBAL;
+							}
+							else
+							{
+								nLane = setTomMarker.Contains( ( note.nTick << 4 ) | 4 )
+									? LANE_LOW_TOM : LANE_CYMBAL;
+							}
+							break;
+						}
+						case 5: nLane = LANE_LOW_TOM; break;
+						default: continue;
+					}
+					data.listNote.Add( new CNote() { nTick = note.nTick, nLane = nLane } );
 				}
 			}
 
@@ -742,9 +856,9 @@ namespace DTXMania
 			{
 				return;
 			}
-			for( int i = 0; i < arLaneSample.Length; i++ )
+			for( int i = 0; i < arBaseSample.Length; i++ )
 			{
-				string strPath = Path.Combine( strFolder, SAMPLE_PREFIX + arLaneSample[ i ] + ".wav" );
+				string strPath = Path.Combine( strFolder, SAMPLE_PREFIX + arBaseSample[ i ] + ".wav" );
 				if( File.Exists( strPath ) )
 				{
 					continue;
