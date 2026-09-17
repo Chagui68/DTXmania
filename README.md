@@ -35,6 +35,28 @@ After extracting the release (or building from source, see below), start the gam
 - `Config.ini` (created next to the executable on first run) stores all settings, including the folders that are scanned for songs/charts.
 - The game must be able to find its `dll\` folder (BASS audio engine, SharpDX/Direct3D, etc.), the `System\` resources and the `ja-JP\` localization files; keep the folder layout intact and do not move the executable out of its folder.
 
+## Adding songs
+The game scans for charts **recursively** below the paths set in `Config.ini` under `DTXPath=`. By default it is `.\` (the game folder), but you can point it to several locations separated by `;`, e.g.:
+
+```ini
+DTXPath=.\;D:\MisCanciones\DTX\;E:\Clone Hero Songs\
+```
+
+Each song must live in its own folder (one song per folder). Supported chart files:
+
+| Format | Description |
+| --- | --- |
+| `.dtx` | Native DTXMania format (also `.bms`/`.bme`/`.gda`/`.g2d` legacy formats). |
+| `.chart` | Rock Band / Clone Hero charts (`notes.chart`). |
+| `.mid` / `.smf` | Clone Hero MIDI charts (`notes.mid`). |
+
+For a Clone Hero song folder (`notes.chart` or `notes.mid`), the game imports the **drums (Expert tab)**, reads `song.ini` for the title/artist and difficulty, and plays the audio from `song.ogg`, `song.mp3` or `song.wav`. Synthetic percussion samples (`_dtxmania_*.wav`) are generated automatically in the song folder on first load. Album art (`album.png`/`album.jpg`) is shown in the song list when available.
+
+Notes:
+- `DTXPath` folders are scanned on startup (and re-scan on song list). Just drop the song folder in place and restart the game (or delete `songlist.db` to force a full rebuild).
+- Audio is limited to `.wav`, `.mp3` and `.ogg`; `.opus` files (used by some Clone Hero packs) are not supported and will be silent.
+- Guitar/bass tracks from `.chart`/`.mid` files are not imported (drums only).
+
 ## Building from source
 Requirements:
 - Visual Studio 2017 or newer (the solution uses MSBuild `ToolsVersion` 12.0/15.0), or an equivalent MSBuild installation.
