@@ -1,3 +1,16 @@
+## About this fork
+
+This repository (`Chagui68/DTXmania`) is a **fork** of [limyz/DTXManiaNX](https://github.com/limyz/DTXManiaNX), which itself was forked from the DTXManiaXG verK SVN repository (see "Original and Ongoing Forks" below). It is maintained as a personal build on top of the upstream codebase, with the following modifications:
+
+| Area | Modification |
+| --- | --- |
+| Clone Hero / Rock Band support | Import `.chart` and `.mid` songs (drums, Expert tab). Charts are converted to DTX in memory on load (`CChartMidiToDtx`) and synthetic percussion samples (`_dtxmania_*.wav`) are generated automatically. `.opus` audio is not supported. |
+| Drum lane mapping | Conversion follows the Guitar Game Chart Formats specification: 4-lane MIDI plays blue/green as cymbals by default, MIDI tom markers `111/112` and 5-lane charts (`101`) play toms, and `.chart` cymbal modifiers `67/68` are honored (see "Adding songs"). |
+| ASIO fix | The package ships the 32-bit native BASS DLLs (`bass*.dll`) matching the x86 executable, fixing a `System.BadImageFormatException (0x8007000B)` when enumerating ASIO devices in the configuration screen. |
+| One-command build and installer | `build.bat` / `build.ps1` compile the solution and produce an Inno Setup installer (`Output\DTXManiaNX-*.exe`) without an IDE. |
+| Build fixes | `DiscordRPC` and `Newtonsoft.Json` references re-pointed to `Runtime\dll`, and an invalid `Del` `ShortcutKeys` value in `CMainForm.resx` corrected to `Delete`. |
+| Documentation | README documents how to run, add songs, build and package the program; release notes are published in English at https://github.com/Chagui68/DTXmania/releases. |
+
 ## What is DTXManiaNX?
 DTXManiaNX is a program that replicates gameplay from Konami's music video game, Gitadora - Drummania/GuitarFreaks. This project was forked from the DTXManiaXG verK SVN repository. It processes DTX files (including older formats such as BMS/BME or GDA/G2D) and allows playing of custom created charts with a use of a game, keyboard or MIDI controller.
 
@@ -22,7 +35,7 @@ http://senamih.com/dtxal
 https://osdn.net/projects/dtxmaniaxg-verk
 
 ## Installation
-1. Download the [latest release](https://github.com/limyz/DTXmaniaXG/releases) of DTXMania and extract it to a location of your choice
+1. Download the [latest release](https://github.com/Chagui68/DTXmania/releases/latest) of DTXManiaNX and extract it to a location of your choice
 
 2. Download and install the [.NET Framework 4.7.1](https://dotnet.microsoft.com/download/dotnet-framework/net471) (if prompted)
 
