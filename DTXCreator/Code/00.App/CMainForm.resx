@@ -1954,7 +1954,7 @@ The image size is 204x269.</value>
     <value>False</value>
   </data>
   <data name="toolStripMenuItem削除.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Del</value>
+    <value>Delete</value>
   </data>
   <data name="toolStripMenuItem削除.Size" type="System.Drawing.Size, System.Drawing">
     <value>208, 22</value>

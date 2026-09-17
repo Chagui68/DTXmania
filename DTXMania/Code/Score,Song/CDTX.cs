@@ -3432,7 +3432,21 @@ namespace DTXMania
 					this.e種別 = EType.DTX;
 				}
 			}
-			if ( this.e種別 != EType.SMF )
+			if( ( ext == ".chart" ) || ( ext == ".mid" ) || ( ext == ".smf" ) )
+			{
+				try
+				{
+					this.e種別 = EType.DTX;
+					string strDtxText = CChartMidiToDtx.tConvert( strファイル名, bヘッダのみ );
+					this.tRead_FromString( strDtxText, db再生速度, nBGMAdjust );
+				}
+				catch( Exception e )
+				{
+					Trace.TraceError( "Chart/MIDI の読み込みに失敗しました。({0})", strファイル名 );
+					Trace.TraceError( "例外: " + e.Message );
+				}
+			}
+			else if ( this.e種別 != EType.SMF )
 			{
 				try
 				{
